@@ -87,3 +87,70 @@ In questo caso ci sono due etichette (`LOAD` e `ONE`) che assumono valore 0 e 8 
     aDD 3
 
  Fatte queste premesse, dovrete quindi preparare un predicato ed una funzione che leggano un file e, se non ci sono problemi, producano lo stato iniziale del LMC.
+ 
+ ## IMPLEMENTAZIONI
+
+**IMPLEMENTAZIONE IN PROLOG** 
+
+L’implementazione del simulatore di LMC in Prolog deve rispettare le restrizioni elencate in questa sezione.
+
+Lo stato del LMC deve essere rappresentato da un termine composto della seguente forma: 
+
+`state(Acc, Pc, Mem, In, Out, Flag).` 
+
+nel caso non sia stata ancora eseguita una istruzione di halt. Nel caso sia stata eseguita invece lo stato deve essere rappresentato usando il funtore *`halted_state`* invece di *`state`*: 
+
+    halted_state(Acc, Pc, Mem, In, Out, Flag).
+
+ Nel termine composto gli argomenti sono i seguenti: 
+ 1. *`Acc`*. Un numero tra 0 e 999 che rappresenta il valore contenuto nell’accumulatore.
+ 2. *`Pc`*. Un numero tra 0 e 999 che rappresenta il valore contenuto nel program counter.
+ 3. *`Mem`*. Una lista di 100 numeri tutti compresi tra 0 e 999 che rappresenta il contenuto della memoria del LMC.
+ 4. *`In`*. Una lista di numeri tra 0 e 999 che rappresenta la coda di input del LMC.
+ 5. *`Out`*. Una lista di numeri tra 0 e 999 che rappresenta la coda di output del LMC.
+ 6. *`Flag`*. Può assumere solo i valori flag e noflag, che indicano rispettivamente che il flag è presente o assente.
+
+Per eseguire il codice del LMC deve essere presente il seguente predicato: 
+
+    one_instruction(State, NewState).
+
+ove State e NewState sono stati del LMC rappresentati come descritto sopra ed il predicato è vero quando l’esecuzione di una singola istruzione a partire da State porta allo stato NewState. Il predicato fallisce nei seguenti casi: 
+
+ 1. Lo stato *`State`* è un *halting_state*, ovvero il sistema è stato arrestato e non può eseguire istruzioni.
+ 2. L’istruzione da eseguire è di input ma la coda di input è vuota.
+ 3. L’istruzione da eseguire non è valida.
+
+ In tutti gli altri casi una query della forma `one_instruction(State, X)` dove State è fissato e X è una variabile deve avere successo e il valore di X deve essere l’unico stato che segue allo stato fornito dopo aver eseguito l’istruzione puntata dal program counter.
+
+Si osservi il seguente esempio:
+
+     ?- one_instruction(state(32, 0, [101, 10, 0…0], [], [], noflag), X). 
+     X = state(42, 1, [101, 10, 0…0], [], [], noflag) 
+
+Dove 0…0 rappresenta i 98 zero che servono ad ottenere una lista di 100 elementi. Nello stato iniziale fornito l’istruzione da eseguire è quella in posizione 0 (dato che il program counter ha valore 0). Questa istruzione ha valore numerico 101, ovvero è una istruzione di addizione che somma al valore contenuto nell’accumulatore il valore contenuto nella cella 1. In questo caso i due valori da sommare sono 32 (accumulatore) e 10 (cella di memoria 1). Il risultato, 42, diventa il nuovo valore dell’accumulatore ed il valore del program counter viene incrementato di uno. Notare che, dato che il valore della somma non supera 999 il flag rimane spento (*`noflag`*). 
+
+Deve essere inoltre presente il seguente predicato: 
+
+    execution_loop(State, Out)
+
+ove *`State`* rappresenta lo stato iniziale del LMC e *`Out`* la coda di output nel momento in cui viene raggiunto uno stato di stop (e quindi eseguita una istruzione di halt). Il predicato deve fallire nel caso l’esecuzione termini senza eseguire una istruzione di halt (ad esempio se si incontra una istruzione non valida). 
+
+Infine, dovrete produrre due predicati per la gestione dell’assembly. Il primo è un predicato dal nome **lmc_load/2** che si preoccupa di leggere un file che contiene un codice assembler e che produce il contenuto “iniziale” della memoria sistema (una lista di 100 numeri tra 0 e 999).
+
+     lmc_load(Filename, Mem).
+
+dove *`Filename`* è il nome di un file e *`Mem`* è la memoria del sistema nel suo "stato iniziale”. 
+
+Il secondo è un predicato dal nome **lmc_run/3** che si preoccupa di leggere un file che contiene un codice assembler, lo carica (con **lmc_load/2**), imposta la coda di input al valore fornito e produce un output che è il risultato dell’invocazione di **execution_loop/2**.
+
+     ?- lmc_run(”my/prolog/code/lmc/test-assembly-42.lmc”, [42], Output) 
+
+è un esempio della sua invocazione. 
+
+**Suggerimenti** 
+Per implementare al meglio (ed in modo semplice) il simulatore LMC in Prolog vi consigliamo come minimo, di utilizzare il predicato nth0/4. 
+
+Un modo per generare uno “stato” iniziale è di usare il predicato di libreria **randseq/3**; attenzione che il primo argomento non può essere superiore al secondo. Ad esempio: 
+
+    ?- randseq(99, 99, Mem). 
+    Mem = [33, 10, 64, 29, 62, 53, 98, 22, 36|...].
