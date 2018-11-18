@@ -7,7 +7,9 @@ Questa repo contiene il codice scritto in linguaggio [Prolog](http://www.swi-pro
 
 ## OVERVIEW DEL PROGETTO
 
-Il little man computer (LMC) è un semplice modello di computer creato per scopi didattici. Esso possiede 100 celle di memoria (numerate da 0 a 99) ognuna della quali può contenere un numero da 0 a 999 (estremi inclusi). Il computer possiede un solo registro, detto accumulatore, una coda di input ed una coda di output. LMC possiede un numero limitato di tipi di istruzioni ed un equivalente assembly altrettanto semplificato. Lo scopo del progetto è quello di produrre A. Un simulatore del LMC che dato il contenuto iniziale delle memoria (una lista di 100 numeri) e una sequenza di valori di input simuli il comportamento del LMC e produca il contenuto della coda di output dopo l’arresto del LMC. B. Un assembler che, dato un file scritto nell’assembly semplificato del LMC produca il contenuto iniziale della memoria. La parte rimanente di questo testo dettaglierà l’architettura del LMC, la sintassi dell’assembly e i predicati/funzioni che le implementazioni in Prolog e Common Lisp devono implementare.
+Il little man computer (LMC) è un semplice modello di computer creato per scopi didattici. Esso possiede 100 celle di memoria (numerate da 0 a 99) ognuna della quali può contenere un numero da 0 a 999 (estremi inclusi). Il computer possiede un solo registro, detto accumulatore, una coda di input ed una coda di output. LMC possiede un numero limitato di tipi di istruzioni ed un equivalente assembly altrettanto semplificato. Lo scopo del progetto è quello di produrre:
+ - [ ] Un simulatore del LMC che dato il contenuto iniziale delle memoria (una lista di 100 numeri) e una sequenza di valori di input simuli il comportamento del LMC e produca il contenuto della coda di output dopo l’arresto del LMC. 
+ - [ ] Un assembler che, dato un file scritto nell’assembly semplificato del LMC produca il contenuto iniziale della memoria. La parte rimanente di questo testo dettaglierà l’architettura del LMC, la sintassi dell’assembly e i predicati/funzioni che le implementazioni in Prolog e Common Lisp devono implementare.
 
 ## ARCHITETTURA DEL LMC
 
