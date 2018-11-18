@@ -35,3 +35,55 @@ Alcuni devi valori non corrispondono a nessuna istruzione. Ad esempio tutti i nu
 |0xx|`Halt`|Termina l’esecuzione del programma. Nessuna ulteriore istruzione viene eseguita.|
 
 Quindi, ad esempio, se l’accumulatore contiene il valore 42, il program counter ha valore 10 ed il contenuto della cella numero 10 è 307, il LMC eseguirà una istruzione di store, dato che il valore è nella forma 3xx. In particolare, il contenuto dell’accumulatore, ovvero 42, verrà scritto nella cella di memoria numero 7 (dato che xx corrisponde a 07). Il program counter verrà poi incrementato di uno, assumendo il valore 11. La procedura verrà ripetuta finché non verrà incontrata un’istruzione di halt o un’istruzione non valida.
+
+## ASSEMBLY PER LMC
+
+
+Oltre a fornire una simulazione per il LMC si deve essere anche in grado di passare da un programma scritto in codice assembly per LMC (che verrà successivamente dettagliato) al contenuto iniziale della memoria del LMC, convertendo quindi il codice assembly in codice macchina. 
+
+Nel file sorgente assembly ogni riga contiene al più una etichetta ed una istruzione. Ogni istruzione corrisponde al contenuto di una cella di memoria. La prima istruzione assembly presente nel file corrisponderà al valore contenuto nella cella 0, la seconda al valore contenuto nella cella 1, e così via.
+
+|    Istruzione | Valori possibili per xx               |Significato               |
+|----------------|-------------------------------|-----------------------------|
+|`ADD xx` |Indirizzo o etichetta |Esegui l’istruzione di addizione tra l’accumulatore e il valore contenuto nella cella indicata da xx|
+|`SUB xx` |Indirizzo o etichetta |Esegui l’istruzione di sottrazione tra l’accumulatore e il valore contenuto nella cella indicata da xx|
+|`STA xx` |Indirizzo o etichetta |Esegue una istruzione di store del valore dell’accumulatore nella cella indicata da xx|
+|`LDA xx` |Indirizzo o etichetta |Esegue una istruzione di load dal valore contenuto nella cella indicata da xx nell’accumulatore|
+|`BRA xx` |Indirizzo o etichetta |Esegue una istruzione di branch non condizionale al valore indicato da xx|
+|`BRZ xx` |Indirizzo o etichetta |Esegue una istruzione di branch condizionale (se l’accumulatore è zero e non vi è il flag acceso) al valore indicato da xx|
+|`BRP xx` |Indirizzo o etichetta |Esegue una istruzione di branch condizionale (se non vi è il flag acceso) al valore indicato da xx
+|`INP` |Nessuno |Esegue una istruzione di input |
+|`OUT` |Nessuno |Esegue una istruzione di output |
+|`HLT` |Nessuno |Esegue una istruzione di halt |
+|`DAT xx`| Numero |Memorizza nella cella di memoria corrispondente a questa istruzione assembly il valore xx|
+|`DAT` |Nessuno |Memorizza nella cella di memoria corrispondente a questa istruzione assembly il valore 0 (equivalente all’istruzione DAT 0).|
+
+Ogni riga del file assembly con una istruzione può contenere prima dell’istruzione una etichetta, ovvero una stringa di caratteri usata per identificare la cella di memoria dove verrà salvata l’istruzione corrente. Le etichette possono poi essere utilizzate al posto degli indirizzi (ovvero numeri tra 0 e 99) all’interno del sorgente. Si veda, ad esempio:
+
+|    **Assembly**| **Cella di memoria**             |**Codice macchina**|
+|----------------|-------------------------------|-----------------------------|
+|BRA LABEL |	 1 	|600|
+
+In questo caso l’etichetta presente nella prima riga assume il valore 0 tutte le volte che appare come argomento di un’altra istruzione. Per un esempio già completo si osservi:
+
+|    **Assembly**| **Cella di memoria**  |**Codice macchina**|
+|--------------------------|------------|-----------|
+|`LOAD LDA 0` | 0 | 500 |
+|`OUT` | 1| 902 |
+|`SUB ONE` | 2| 208 |
+|`BRZ ONE` | 3| 708 |
+|`LDA LOAD` | 4| 500 |
+|`ADD ONE` | 5| 108 |
+|`STA LOAD` | 6| 300 |
+|`BRA LOAD` | 7| 600 |
+|`ONE DAT 1` | 8| 1   |
+
+In questo caso ci sono due etichette (`LOAD` e `ONE`) che assumono valore 0 e 8 rispettivamente. Questo corrisponde alla cella di memoria dove la versione convertita in codice macchina dell’istruzione assembly presente nella stessa riga è stata salvata. Si noti inoltre come le etichette possano essere utilizzate prima di venire definite. Se una riga contiene una doppia barra (`//`) tutto il resto della riga deve venire ignorato e considerato come commento. L’assembly è inoltre case-insensitive e possono esserci uno o più spazi tra etichetta e istruzione e etichetta e argomento. Le seguenti istruzioni sono quindi tutte equivalenti: 
+
+    ADD 3 
+    Add 3 
+    add 3 // Questo è un commento 
+    ADD 3 // Aggiunte il valore della cella 3 all’accumulatore 
+    aDD 3
+
+ Fatte queste premesse, dovrete quindi preparare un predicato ed una funzione che leggano un file e, se non ci sono problemi, producano lo stato iniziale del LMC.
