@@ -126,12 +126,116 @@ execution_loop(state(Acc, Pc, Mem, In, Out, Flag), NOut) :-
 execution_loop(halted_state(_Acc, _Pc, _Mem, _In, Out, _Flag), Out) :-
     !.
 
+lmc_load(Filename, Mem) :-
+    filename_to_list(Filename, Mem).
 
 
+%%%% filename_to_list/2
+% filename_to_list(Filename, List)
+%
+% Filename nome del file da leggere
+%
+% List lista risultate dalla lettura priva di spazi e commenti
 
+filename_to_list(Filename, List) :-
+    open(Filename, read, In),
+    input_to_list_string(In, 1, List).
+
+%%%% input_to_list_string/3
+%input_to_list_string(In, End, List)
+%
+% In è lo stream di input
+%
+% End se settato a -1 indica che ho raggiunto la fine del file
+%
+% List Lista di stringhe
+
+
+input_to_list_string(In, End, List) :-
+    compare(>, End, 0),
+    !,
+    read_string(In, "\n", " ", Sep, S),
+    input_to_list_string(In, Sep, Out),
+    split_string(S, " ", " ", Ss),
+    delete_list_comments(Ss, Sf),
+    custom_append([Sf], Out, List).
+
+input_to_list_string(In, -1, []) :-
+    !,
+    close(In).
+
+%%%% custom_append/3
+% custom_append(List1, List2, List1List2)
+%
+% Uguale a un'append ma se la lista 1 è una lista contenente una lista
+% vuota la ignora
+
+custom_append([[]], Y, Y) :-
+    !.
+
+custom_append(X, Y, Z) :-
+    !,
+    append(X, Y, Z).
+
+%%%% delete_list_comments/2
+% delete_list_comments(List, ListNoComments)
+%
+% List è una lista di stringhe che possono includere commenti
+%
+% ListNoComments è la stessa lista di prima purgata dai commenti
+
+delete_list_comments(List, ListNoComments) :-
+    is_list(List),
+    parse_list_element(List, nocomment, ListNoComments ).
+
+%%%% parse_list_element/3
+% parse_list_element(List, Flag, ListNoComments))
+%
+% List è una lista di stringhe che possono includere commenti
+%
+% Flag è un flag che indica se è stato trovato o meno un commento dentro
+% la lista
+%
+% ListNoComments è la stessa lista di prima purgata dai commenti
+
+parse_list_element([X | Xs], nocomment, ListNoComments) :-
+    !,
+    findall(B, sub_string(X, B, 2, _A, "//"), Ls),
+    purge_element_comment(X, Ls, ListElement, Comment),
+    parse_list_element(Xs, Comment, Ys),
+    custom_append([ListElement], Ys, ListNoComments).
+
+parse_list_element(_, comment, []) :-
+    !.
+
+parse_list_element([], _, []) :-
+    !.
+
+%%%% purge_element_comment/4
+% purge_element_comment(Element, [DoubleBackSlashPositions],
+% ElementPurged, Comment).
+%
+% Element è la potenziale stringa che potrebbe contenere un commento
+%
+% [DoubleBackSlashPositions] non è molto elegante ma è una soluzione
+% a commenti del tipo //commento//fastidiosissimo
+%
+% ElementPurged elemento purgato dagli eventuali commenti attaccati
+%
+% Comment è un flag che mi dice se ha trovato un commento o no
+%
+
+purge_element_comment(X, [], X, nocomment) :-
+    !.
+
+purge_element_comment(_, [0 | _], [], comment) :-
+    !.
+
+purge_element_comment(X, [Y], Xp, comment) :-
+    !,
+    sub_string(X, 0, Y, _, Xp).
 
 %%%% end of file LMC.pl
-
 
 
 
